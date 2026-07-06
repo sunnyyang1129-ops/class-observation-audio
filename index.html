@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>專家教師錄影教學觀察紀錄表</title>
+<style>
+  :root{
+    --ink:#22303f;
+    --ink-soft:#5c6c7a;
+    --paper:#f6f5f1;
+    --panel:#ffffff;
+    --line:#dcdbd4;
+    --accent:#3e6259;
+    --accent-soft:#e7efec;
+    --record:#a8443a;
+    --record-soft:#f6e6e3;
+    --ok:#3e6259;
+    --warn:#b8863b;
+    --warn-soft:#f7ecd9;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+    line-height:1.6;
+    padding-bottom:80px;
+  }
+  header{
+    background:var(--ink);
+    color:#fff;
+    padding:20px 18px 24px;
+  }
+  header h1{
+    margin:0 0 4px;
+    font-size:1.2rem;
+    font-weight:700;
+    letter-spacing:.02em;
+  }
+  header p{
+    margin:0;
+    font-size:.85rem;
+    color:#c7d0d6;
+  }
+  .wrap{max-width:640px;margin:0 auto;padding:0 16px;}
+  .gate{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:20px;
+    margin-top:-14px;
+    box-shadow:0 6px 18px rgba(34,48,63,.08);
+  }
+  .gate label{
+    display:block;
+    font-size:.85rem;
+    font-weight:600;
+    margin-bottom:6px;
+    color:var(--ink-soft);
+  }
+  .gate input{
+    width:100%;
+    padding:12px 14px;
+    font-size:1rem;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:#fbfbf9;
+  }
+  .gate button{
+    margin-top:12px;
+    width:100%;
+    padding:13px;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    font-size:1rem;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .gate .hint{font-size:.78rem;color:var(--ink-soft);margin-top:8px;}
+
+  #app{display:none;}
+
+  .progress-bar{
+    position:sticky;top:0;z-index:5;
+    background:var(--paper);
+    padding:10px 16px 8px;
+    border-bottom:1px solid var(--line);
+  }
+  .progress-bar .track{
+    height:6px;background:var(--line);border-radius:3px;overflow:hidden;
+  }
+  .progress-bar .fill{height:100%;background:var(--accent);width:0%;transition:width .3s;}
+  .progress-bar .label{font-size:.72rem;color:var(--ink-soft);margin-top:4px;}
+
+  .resume-banner{
+    margin:14px 0;padding:14px;background:var(--warn-soft);border:1px solid var(--warn);
+    border-radius:10px;font-size:.85rem;color:#6b4f1f;display:none;
+  }
+
+  .section-title{
+    margin:26px 0 10px;
+    font-size:1rem;
+    font-weight:700;
+    color:var(--accent);
+    padding-bottom:6px;
+    border-bottom:2px solid var(--accent-soft);
+  }
+
+  .qcard{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px;
+    margin-bottom:14px;
+    position:relative;
+  }
+  .qcard.done{border-color:var(--ok);}
+  .qtext{
+    font-size:.98rem;
+    font-weight:600;
+    margin:4px 0 12px;
+    color:var(--ink);
+  }
+  .status-chip{
+    position:absolute;top:14px;right:14px;
+    font-size:.7rem;
+    padding:2px 8px;
+    border-radius:20px;
+    background:var(--accent-soft);
+    color:var(--accent);
+    font-weight:700;
+    display:none;
+  }
+  .status-chip.show{display:inline-block;}
+
+  textarea, input[type=text]{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    font-size:.92rem;
+    font-family:inherit;
+    background:#fbfbf9;
+    color:var(--ink);
+  }
+  textarea{min-height:80px;resize:vertical;}
+
+  .checkbox-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+  .checkbox-list label{
+    display:flex;align-items:flex-start;gap:8px;
+    font-size:.92rem;
+    padding:8px 10px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:#fbfbf9;
+    cursor:pointer;
+  }
+  .checkbox-list input[type=checkbox]{margin-top:3px;width:18px;height:18px;flex-shrink:0;}
+  .other-input{display:none;margin-top:6px;}
+  .other-input.show{display:block;}
+
+  .controls{
+    display:flex;
+    gap:8px;
+    margin-top:10px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+  .rec-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:9px 14px;
+    border-radius:20px;
+    border:1px solid var(--record);
+    background:var(--record-soft);
+    color:var(--record);
+    font-weight:700;
+    font-size:.85rem;
+    cursor:pointer;
+  }
+  .rec-btn.active{
+    background:var(--record);
+    color:#fff;
+  }
+  .dot{
+    width:8px;height:8px;border-radius:50%;background:var(--record);
+    display:inline-block;
+  }
+  .rec-btn.active .dot{background:#fff;animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+  .send-btn{
+    padding:9px 16px;
+    border-radius:20px;
+    border:1px solid var(--accent);
+    background:var(--accent);
+    color:#fff;
+    font-weight:700;
+    font-size:.85rem;
+    cursor:pointer;
+  }
+  .send-btn:disabled{opacity:.5;cursor:default;}
+
+  .batch-submit-wrap{
+    text-align:center;
+    margin:6px 0 30px;
+  }
+  .batch-submit-wrap .send-btn{
+    padding:12px 28px;
+    font-size:.95rem;
+  }
+
+  audio{
+    display:block;
+    width:100%;
+    margin-top:10px;
+    height:34px;
+  }
+  .rec-time{font-size:.8rem;color:var(--record);font-weight:700;min-width:44px;}
+
+  footer.note{
+    max-width:640px;margin:20px auto 40px;padding:0 16px;
+    font-size:.75rem;color:var(--ink-soft);
+  }
+
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(34,48,63,.55);
+    display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;
+  }
+  .modal-box{
+    background:#fff;border-radius:14px;padding:22px;max-width:340px;width:100%;
+    box-shadow:0 12px 30px rgba(0,0,0,.25);
+  }
+  .modal-box p{margin:0 0 18px;font-size:.92rem;color:var(--ink);line-height:1.6;}
+  .modal-box button{
+    display:block;width:100%;margin-bottom:10px;padding:11px;border-radius:8px;
+    border:1px solid var(--accent);background:var(--accent);color:#fff;
+    font-weight:700;font-size:.88rem;cursor:pointer;
+  }
+  .modal-box button.secondary{background:#fff;color:var(--accent);}
+  .modal-box button:last-child{margin-bottom:0;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>專家教師錄影教學觀察紀錄表</h1>
+    <p>詳答題可直接說話錄音，系統會自動轉出文字草稿；也可以直接打字回答（兩者僅能擇一上傳）。</p>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="gate" id="gate">
+    <label for="codeInput">請輸入您的填答代碼</label>
+    <input type="text" id="codeInput" placeholder="例如：專家A、EXP01">
+    <button onclick="startSession()">開始填答</button>
+    <div class="hint">代碼由主辦單位提供，用來對應您這份紀錄，請勿使用真實姓名。若先前已用同一裝置、同一代碼填過，會自動載入先前的進度。</div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="progress-bar">
+    <div class="wrap" style="padding:0;">
+      <div class="track"><div class="fill" id="progressFill"></div></div>
+      <div class="label" id="progressLabel">已完成 0 / 0 題</div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="resume-banner" id="resumeBanner"></div>
+  </div>
+
+  <div class="wrap" id="questionArea"></div>
+
+  <div class="wrap">
+    <div id="doneBanner" style="display:none;margin:20px 0;padding:16px;background:var(--accent-soft);border:1px solid var(--accent);border-radius:12px;text-align:center;font-weight:700;color:var(--accent);">
+      🎉 全部題目已送出，感謝您的填答，可以關閉此頁面了。
+    </div>
+  </div>
+
+  <footer class="note">
+    每一項送出後即會上傳保存。若中途離開頁面，重新用同一裝置、同一填答代碼打開此網址，先前已送出的題目會標示「已送出」，未完成的題目也會提醒您繼續填答（此記錄僅存在目前這個瀏覽器內，換裝置或清除瀏覽器資料會失效）。
+  </footer>
+</div>
+
+<script>
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx9rjiabdFWGZsJKc2yBUW3M3nKfC8pmk79JZ_eU38h5Z6eWky2LussDpUFx_9zTL4w/exec";
+const STORAGE_KEY = "obsSurveyProgress_v1";
+
+// ---------- 一、課程基本資訊 ----------
+const BASIC_INFO = [
+  {section:"一、課程基本資訊", id:"courseName", text:"課程名稱", type:"text"},
+  {section:"一、課程基本資訊", id:"teacher", text:"授課教師（開放觀課教師）", type:"text"},
+  {section:"一、課程基本資訊", id:"expert", text:"觀課專家教師", type:"text"},
+  {section:"一、課程基本資訊", id:"observeDate", text:"觀課日期（例如：2026/07/06）", type:"text"},
+  {section:"一、課程基本資訊", id:"observeTime", text:"觀課時間（例如：早上8-10點／下午2-4點）", type:"text"}
+];
+
+// ---------- 二、課前準備（錄音，逐題送出） ----------
+const PRE_CLASS = [
+  {section:"二、課前準備", id:"1", text:"授課住院醫師說明該教學活動的目標、使用的教材、教學方法等", type:"record"},
+  {section:"二、課前準備", id:"2", text:"觀課前共識內容", type:"record"}
+];
+
+// ---------- 三、全課堂觀察（一）教學觀察：量表（可複選） ----------
+const SCALE = [
+  {section:"三、全課堂觀察（一）教學觀察", id:"1-2", text:"講解清晰度／課程結構", type:"scale",
+    options:["跳過此項","清楚闡述教學目標","條理分明/教學單元化","連結先備知識","摘要總結","教學步調適宜","其他"]},
+  {section:"三、全課堂觀察（一）教學觀察", id:"3-4", text:"教學內容/教學關聯性", type:"scale",
+    options:["跳過此項","展現學科專業性","與研究連結","難易度適中","提供最新發展資訊","緊扣課程目標","其他"]},
+  {section:"三、全課堂觀察（一）教學觀察", id:"5", text:"有效溝通", type:"scale",
+    options:["跳過此項","激發學員學習熱忱","善用實例講解","清楚解釋複雜概念","即時確認學員的理解狀況","定義名詞、概念或原則","其他"]},
+  {section:"三、全課堂觀察（一）教學觀察", id:"6", text:"師生互動", type:"scale",
+    options:["跳過此項","鼓勵發問及發言","鼓勵主動學習和課堂參與","維持學員專注力","其他"]},
+  {section:"三、全課堂觀察（一）教學觀察", id:"7", text:"支持學員學習", type:"scale",
+    options:["跳過此項","培養批判思考能力","鼓勵學員自主學習","鼓勵獨立分析、詮釋能力","透過評量或提問了解學習進展","提供有效的回饋","其他"]},
+  {section:"三、全課堂觀察（一）教學觀察", id:"8-9", text:"教材運用／教學氛圍", type:"scale",
+    options:["跳過此項","教學場域適合課程設計","教學講義項目：投影講義/書面/影音/其他","講授內容視覺化幫助理解","採翻轉教學或遠距教學","其他"]}
+];
+
+// ---------- 學員學習觀察 觀察表一（錄音，逐題送出） ----------
+const OBS1 = [
+  {section:"觀察表一：學員課程表現及對於課程的專注度等觀察紀錄", id:"1", text:"學員到課及遲到（或早退）情形如何？", type:"record"},
+  {section:"觀察表一：學員課程表現及對於課程的專注度等觀察紀錄", id:"2", text:"學員投入課堂學習的程度如何？（如參與討論度、提問頻率、與同儕互動情形等）", type:"record"},
+  {section:"觀察表一：學員課程表現及對於課程的專注度等觀察紀錄", id:"3", text:"小組內互動情形如何？（討論的頻率、互動內容以及互動方式等）", type:"record"},
+  {section:"觀察表一：學員課程表現及對於課程的專注度等觀察紀錄", id:"4", text:"內容是否聚焦課程主題？", type:"record"},
+  {section:"觀察表一：學員課程表現及對於課程的專注度等觀察紀錄", id:"5", text:"學員對哪個部分感到興趣？", type:"record"},
+  {section:"觀察表一：學員課程表現及對於課程的專注度等觀察紀錄", id:"6", text:"學員對哪個部分較無法理解？", type:"record"},
+  {section:"觀察表一：學員課程表現及對於課程的專注度等觀察紀錄", id:"7", text:"其他觀察", type:"record"}
+];
+
+// ---------- 觀察表二（錄音，逐題送出） ----------
+const OBS2 = [
+  {section:"觀察表二：特別教學行為與學習行為的觀察（如遊戲化教學、科技輔助教學等）", id:"1", text:"教學主題", type:"record"},
+  {section:"觀察表二：特別教學行為與學習行為的觀察（如遊戲化教學、科技輔助教學等）", id:"2", text:"教師教學行為", type:"record"},
+  {section:"觀察表二：特別教學行為與學習行為的觀察（如遊戲化教學、科技輔助教學等）", id:"3", text:"學員的反應", type:"record"},
+  {section:"觀察表二：特別教學行為與學習行為的觀察（如遊戲化教學、科技輔助教學等）", id:"4", text:"學員的學習行為", type:"record"},
+  {section:"觀察表二：特別教學行為與學習行為的觀察（如遊戲化教學、科技輔助教學等）", id:"5", text:"您的觀察紀錄", type:"record"}
+];
+
+// ---------- 觀察後回饋（錄音，逐題送出） ----------
+const FEEDBACK = [
+  {section:"觀察後回饋", id:"1", text:"欣賞課程哪些優點？", type:"record"},
+  {section:"觀察後回饋", id:"2", text:"有哪方面可以改善與其建議？", type:"record"},
+  {section:"觀察後回饋", id:"3", text:"分享觀課的心得或收穫？", type:"record"},
+  {section:"觀察後回饋", id:"4", text:"問題提問", type:"record"}
+];
+
+const ITEMS = [].concat(BASIC_INFO, PRE_CLASS, SCALE, OBS1, OBS2, FEEDBACK);
+const BASIC_START = 0;
+const BASIC_END = BASIC_INFO.length - 1;
+const SCALE_START = BASIC_INFO.length + PRE_CLASS.length;
+const SCALE_END = SCALE_START + SCALE.length - 1;
+
+let respondentCode = "";
+let completedCount = 0;
+let sessionStarted = false;
+let savedProgress = {};
+
+function loadAllProgress(){
+  try{
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+  }catch(e){
+    return {};
+  }
+}
+function saveAllProgress(all){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+  }catch(e){}
+}
+function markItemDone(idx, value){
+  const all = loadAllProgress();
+  if(!all[respondentCode]) all[respondentCode] = {};
+  all[respondentCode][idx] = {done:true, value: value || ""};
+  saveAllProgress(all);
+  savedProgress = all[respondentCode];
+}
+
+function startSession(){
+  const val = document.getElementById('codeInput').value.trim();
+  if(!val){
+    alert("請先輸入填答代碼");
+    return;
+  }
+  respondentCode = val;
+  sessionStarted = true;
+  const allProgress = loadAllProgress();
+  savedProgress = allProgress[respondentCode] || {};
+
+  document.getElementById('gate').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  renderItems();
+  restoreProgress();
+  updateProgress();
+}
+
+function renderItems(){
+  const area = document.getElementById('questionArea');
+  let lastSection = null;
+  let html = "";
+
+  ITEMS.forEach((item, idx) => {
+    if(item.section !== lastSection){
+      html += `<div class="section-title">${item.section}</div>`;
+      lastSection = item.section;
+    }
+
+    html += `<div class="qcard" id="qcard-${idx}"><div class="status-chip" id="chip-${idx}">已送出</div>`;
+    html += `<div class="qtext">${item.text}</div>`;
+
+    if(item.type === 'text'){
+      html += `<input type="text" id="field-${idx}">`;
+    }
+
+    if(item.type === 'scale'){
+      html += `<div class="checkbox-list">`;
+      item.options.forEach((opt) => {
+        if(opt === '其他'){
+          html += `<label><input type="checkbox" data-scale="${idx}" value="其他" onchange="toggleOtherInput(${idx})"> 其他</label>`;
+        } else {
+          html += `<label><input type="checkbox" data-scale="${idx}" value="${opt}"> ${opt}</label>`;
+        }
+      });
+      html += `</div>`;
+      html += `<input type="text" id="other-${idx}" class="other-input" placeholder="請說明「其他」內容">`;
+    }
+
+    if(item.type === 'record'){
+      html += `<textarea id="text-${idx}" placeholder="可直接打字，或按下方按鈕開始錄音自動產生文字草稿"></textarea>`;
+      html += `<div class="controls">
+        <button class="rec-btn" id="recbtn-${idx}" onclick="toggleRecord(${idx})">
+          <span class="dot"></span><span id="recbtn-label-${idx}">開始錄音</span>
+        </button>
+        <span class="rec-time" id="rectime-${idx}"></span>
+        <button class="send-btn" id="sendbtn-${idx}" onclick="sendAnswer(${idx})">送出這一題</button>
+      </div>
+      <audio id="audio-${idx}" controls style="display:none;"></audio>`;
+    }
+
+    html += `</div>`;
+
+    if(idx === BASIC_END){
+      html += `<div class="batch-submit-wrap">
+        <button class="send-btn" id="batchbtn-basic" onclick="sendBatch(${BASIC_START}, ${BASIC_END}, 'batchbtn-basic')">送出課程基本資訊</button>
+      </div>`;
+    }
+    if(idx === SCALE_END){
+      html += `<div class="batch-submit-wrap">
+        <button class="send-btn" id="batchbtn-scale" onclick="sendBatch(${SCALE_START}, ${SCALE_END}, 'batchbtn-scale')">送出量表勾選結果</button>
+      </div>`;
+    }
+  });
+
+  area.innerHTML = html;
+}
+
+function restoreProgress(){
+  const entries = Object.keys(savedProgress);
+  if(entries.length === 0) return;
+
+  entries.forEach(idxStr => {
+    const idx = parseInt(idxStr, 10);
+    const item = ITEMS[idx];
+    if(!item) return;
+    const rec = savedProgress[idxStr];
+    if(!rec || !rec.done) return;
+
+    if(item.type === 'text'){
+      const f = document.getElementById('field-'+idx);
+      if(f) f.value = rec.value;
+    } else if(item.type === 'scale'){
+      // 還原勾選狀態
+      const parts = (rec.value || '').split('、');
+      parts.forEach(p => {
+        if(p.startsWith('其他：')){
+          const box = document.querySelector(`input[data-scale="${idx}"][value="其他"]`);
+          if(box){ box.checked = true; toggleOtherInput(idx); }
+          const otherVal = p.replace('其他：','');
+          const otherField = document.getElementById('other-'+idx);
+          if(otherField && otherVal !== '（未填寫說明）') otherField.value = otherVal;
+        } else {
+          const box = document.querySelector(`input[data-scale="${idx}"][value="${p}"]`);
+          if(box) box.checked = true;
+        }
+      });
+    } else if(item.type === 'record'){
+      const t = document.getElementById('text-'+idx);
+      if(t) t.value = rec.value;
+    }
+
+    const card = document.getElementById('qcard-'+idx);
+    if(card) card.classList.add('done');
+    const chip = document.getElementById('chip-'+idx);
+    if(chip) chip.classList.add('show');
+    completedCount++;
+  });
+
+  const doneCount = entries.length;
+  const remain = ITEMS.length - doneCount;
+  if(doneCount > 0){
+    const banner = document.getElementById('resumeBanner');
+    banner.style.display = 'block';
+    banner.textContent = `偵測到您先前已完成 ${doneCount} 題，尚有 ${remain} 題未完成，請繼續往下填答。（已完成的題目仍可重新編輯後再次送出）`;
+  }
+}
+
+function toggleOtherInput(idx){
+  const checkbox = document.querySelector(`input[data-scale="${idx}"][value="其他"]`);
+  const otherInput = document.getElementById('other-'+idx);
+  if(checkbox.checked){
+    otherInput.classList.add('show');
+  } else {
+    otherInput.classList.remove('show');
+    otherInput.value = '';
+  }
+}
+
+// ---- 選擇視窗（文字/錄音衝突時使用） ----
+function showChoiceModal(message, choices){
+  return new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    const box = document.createElement('div');
+    box.className = 'modal-box';
+    const p = document.createElement('p');
+    p.textContent = message;
+    box.appendChild(p);
+    choices.forEach((c, i) => {
+      const btn = document.createElement('button');
+      if(i>0) btn.classList.add('secondary');
+      btn.textContent = c.label;
+      btn.onclick = () => { document.body.removeChild(overlay); resolve(c.value); };
+      box.appendChild(btn);
+    });
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+  });
+}
+
+// ---- recording state per question ----
+const recState = {};
+
+function getRecognitionClass(){
+  return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+}
+
+async function toggleRecord(idx){
+  if(!recState[idx]) recState[idx] = {recording:false};
+  const st = recState[idx];
+
+  if(!st.recording){
+    try{
+      const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+      st.stream = stream;
+      st.chunks = [];
+
+      const mimeCandidates = ['audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus'];
+      let chosenMime = '';
+      for(const m of mimeCandidates){
+        if(window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)){
+          chosenMime = m; break;
+        }
+      }
+      const extMap = {'audio/mp4':'m4a','audio/webm':'webm','audio/ogg':'ogg'};
+      const baseMime = chosenMime.split(';')[0];
+      st.mimeType = chosenMime || 'audio/webm';
+      st.fileExt = extMap[baseMime] || 'webm';
+
+      st.mediaRecorder = chosenMime ? new MediaRecorder(stream,{mimeType:chosenMime}) : new MediaRecorder(stream);
+      st.mediaRecorder.ondataavailable = e => { if(e.data.size>0) st.chunks.push(e.data); };
+      st.mediaRecorder.onstop = () => {
+        const blob = new Blob(st.chunks, {type: st.mimeType});
+        st.audioBlob = blob;
+        const audioEl = document.getElementById('audio-'+idx);
+        audioEl.src = URL.createObjectURL(blob);
+        audioEl.style.display = 'block';
+        stream.getTracks().forEach(t=>t.stop());
+      };
+      st.mediaRecorder.start();
+
+      const RecClass = getRecognitionClass();
+      if(RecClass){
+        st.recognition = new RecClass();
+        st.recognition.lang = 'zh-TW';
+        st.recognition.continuous = true;
+        st.recognition.interimResults = true;
+        st.baseText = document.getElementById('text-'+idx).value;
+        if(st.baseText) st.baseText += " ";
+        st.recognition.onresult = (e) => {
+          let finalT = "";
+          let interimT = "";
+          for(let i=0;i<e.results.length;i++){
+            if(e.results[i].isFinal) finalT += e.results[i][0].transcript;
+            else interimT += e.results[i][0].transcript;
+          }
+          document.getElementById('text-'+idx).value = st.baseText + finalT + interimT;
+        };
+        st.recognition.onerror = () => {};
+        st.recognition.start();
+      }
+
+      st.recording = true;
+      st.startTime = Date.now();
+      st.timerInt = setInterval(()=>{
+        const sec = Math.floor((Date.now()-st.startTime)/1000);
+        const m = String(Math.floor(sec/60)).padStart(2,'0');
+        const s = String(sec%60).padStart(2,'0');
+        document.getElementById('rectime-'+idx).textContent = m+':'+s;
+      },500);
+
+      document.getElementById('recbtn-'+idx).classList.add('active');
+      document.getElementById('recbtn-label-'+idx).textContent = "停止錄音";
+    }catch(err){
+      alert("無法使用麥克風，請確認已允許瀏覽器存取麥克風權限。");
+    }
+  } else {
+    document.getElementById('recbtn-'+idx).classList.remove('active');
+    document.getElementById('recbtn-label-'+idx).textContent = "處理錄音中...";
+    document.getElementById('recbtn-'+idx).disabled = true;
+    document.getElementById('sendbtn-'+idx).disabled = true;
+
+    if(st.recognition) st.recognition.stop();
+    clearInterval(st.timerInt);
+    st.recording = false;
+
+    await new Promise(resolve => {
+      if(st.mediaRecorder && st.mediaRecorder.state !== 'inactive'){
+        st.mediaRecorder.addEventListener('stop', resolve, {once:true});
+        st.mediaRecorder.stop();
+      } else {
+        resolve();
+      }
+    });
+
+    document.getElementById('recbtn-'+idx).disabled = false;
+    document.getElementById('sendbtn-'+idx).disabled = false;
+    document.getElementById('recbtn-label-'+idx).textContent = "重新錄音";
+  }
+}
+
+function blobToBase64(blob){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+function getScaleValue(idx){
+  const boxes = document.querySelectorAll(`input[data-scale="${idx}"]:checked`);
+  const values = Array.from(boxes).map(b => b.value);
+  const otherIdx = values.indexOf('其他');
+  if(otherIdx > -1){
+    const otherText = document.getElementById('other-'+idx).value.trim();
+    values[otherIdx] = '其他：' + (otherText || '（未填寫說明）');
+  }
+  return values.join('、');
+}
+
+async function postToSheet(item, text, audioBlob, mimeType, fileExt){
+  const formData = new FormData();
+  formData.append('respondentCode', respondentCode);
+  formData.append('section', item.section);
+  formData.append('questionId', item.id);
+  formData.append('questionText', item.text);
+  formData.append('transcriptText', text);
+
+  if(audioBlob){
+    const base64 = await blobToBase64(audioBlob);
+    formData.append('audioBase64', base64);
+    formData.append('audioMime', mimeType || 'audio/webm');
+    formData.append('audioExt', fileExt || 'webm');
+  }
+
+  await fetch(APPS_SCRIPT_URL, {
+    method:'POST',
+    mode:'no-cors',
+    body: formData
+  });
+}
+
+async function sendAnswer(idx){
+  const item = ITEMS[idx];
+  const st = recState[idx] || {};
+
+  if(item.type === 'record' && st.recording){
+    alert("請先按「停止錄音」，再送出這一題。");
+    return;
+  }
+
+  let text = document.getElementById('text-'+idx).value.trim();
+  let audioBlob = st.audioBlob || null;
+  const hasText = text.length > 0;
+  const hasAudio = !!audioBlob;
+
+  if(hasText && hasAudio){
+    const choice = await showChoiceModal(
+      "偵測到這一題同時有文字內容與錄音檔，僅能擇一上傳，請選擇：",
+      [
+        {label:"只上傳文字（不上傳錄音檔）", value:"text"},
+        {label:"只上傳錄音檔（清空文字內容）", value:"audio"}
+      ]
+    );
+    if(choice === "text"){
+      audioBlob = null;
+    } else {
+      text = "";
+    }
+  }
+
+  const btn = document.getElementById('sendbtn-'+idx);
+  btn.disabled = true;
+  btn.textContent = "送出中...";
+
+  try{
+    await postToSheet(item, text, audioBlob, st.mimeType, st.fileExt);
+    const card = document.getElementById('qcard-'+idx);
+    if(!card.classList.contains('done')){
+      card.classList.add('done');
+      completedCount++;
+      updateProgress();
+    }
+    document.getElementById('chip-'+idx).classList.add('show');
+    btn.textContent = audioBlob ? "已送出（含錄音檔），可再次修改送出" : "已送出（僅文字），可再次修改送出";
+    markItemDone(idx, text || (audioBlob ? "（錄音檔，無文字草稿）" : ""));
+  }catch(err){
+    alert("送出失敗，請檢查網路連線後再試一次。");
+    btn.textContent = "送出這一題";
+  }
+  btn.disabled = false;
+}
+
+async function sendBatch(startIdx, endIdx, btnId){
+  const btn = document.getElementById(btnId);
+  btn.disabled = true;
+  btn.textContent = "送出中...";
+
+  let sentCount = 0;
+  let skippedCount = 0;
+
+  for(let idx = startIdx; idx <= endIdx; idx++){
+    const item = ITEMS[idx];
+    let text = "";
+    if(item.type === 'text'){
+      text = document.getElementById('field-'+idx).value.trim();
+    } else if(item.type === 'scale'){
+      text = getScaleValue(idx);
+    }
+
+    if(!text){
+      skippedCount++;
+      continue;
+    }
+
+    try{
+      await postToSheet(item, text, null, null, null);
+      const card = document.getElementById('qcard-'+idx);
+      if(!card.classList.contains('done')){
+        card.classList.add('done');
+        completedCount++;
+      }
+      document.getElementById('chip-'+idx).classList.add('show');
+      markItemDone(idx, text);
+      sentCount++;
+    }catch(err){
+      skippedCount++;
+    }
+  }
+
+  updateProgress();
+  btn.disabled = false;
+  btn.textContent = (btnId === 'batchbtn-basic') ? "送出課程基本資訊" : "送出量表勾選結果";
+
+  if(skippedCount > 0){
+    alert(`已送出 ${sentCount} 項，尚有 ${skippedCount} 項未填寫，請填寫後再按一次按鈕送出。`);
+  } else {
+    alert(`已成功送出 ${sentCount} 項。`);
+  }
+}
+
+function updateProgress(){
+  const pct = Math.round((completedCount/ITEMS.length)*100);
+  document.getElementById('progressFill').style.width = pct+'%';
+  document.getElementById('progressLabel').textContent = `已完成 ${completedCount} / ${ITEMS.length} 題`;
+  if(completedCount >= ITEMS.length){
+    document.getElementById('doneBanner').style.display = 'block';
+  }
+}
+
+window.addEventListener('beforeunload', function(e){
+  if(sessionStarted && completedCount < ITEMS.length){
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+</script>
+
+</body>
+</html>
